@@ -1,145 +1,47 @@
 import streamlit as st
-import tensorflow as tf
 
-import pickle
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from src.config import APP_LINK, CUSTOM_CSS, LANGUAGES, PAGE_CONFIG
+from src.model_service import SentimentModel
+from src.utils import init_translation_state, set_language, translate
 
-from deep_translator import GoogleTranslator
 
-# --- Configuration de la traduction automatique ---
-LANGUAGES = {
-    "fr": "🇫🇷 Français",
-    "en": "🇬🇧 English",
-    "es": "🇪🇸 Español",
-    "de": "🇩🇪 Deutsch",
-    "it": "🇮🇹 Italiano",
-    "pt": "🇵🇹 Português",
-    "ja": "🇯🇵 日本語",
-    "zh-CN": "🇨🇳 中文",
-    "ar": "🇸🇦 العربية",
-    "ru": "🇷🇺 Русский"
-}
-
-# Initialisation de la langue
-if 'language' not in st.session_state:
-    st.session_state.language = 'fr'
-
-# Sélecteur de langue
+# Initialisation de la langue et de la traduction
+current_language = init_translation_state()
 lang = st.sidebar.selectbox(
-    "🌐 Language / Langue", 
+    "🌐 Language / Langue",
     options=list(LANGUAGES.keys()),
     format_func=lambda x: LANGUAGES[x],
-    index=list(LANGUAGES.keys()).index(st.session_state.language)
+    index=list(LANGUAGES.keys()).index(current_language),
 )
-
-st.session_state.language = lang
-
-# Cache pour les traductions (évite de retranduire à chaque fois)
-if 'translations_cache' not in st.session_state:
-    st.session_state.translations_cache = {}
-
-def _(text):
-    """Fonction de traduction automatique avec cache"""
-    if lang == 'fr':
-        return text
-    
-    # Vérifier le cache
-    cache_key = f"{lang}_{text}"
-    if cache_key in st.session_state.translations_cache:
-        return st.session_state.translations_cache[cache_key]
-    
-    # Traduire
-    try:
-        translated = GoogleTranslator(source='fr', target=lang).translate(text)
-        st.session_state.translations_cache[cache_key] = translated
-        return translated
-    except:
-        return text
-    
+set_language(lang)
 
 
-# Définir la configuration de la page en premier
-# Au début de votre script
-st.set_page_config(
-    page_title=_("Analyse de Sentiments"),
-    page_icon="😊",  # Ajoutez une icône
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+def _(text: str) -> str:
+    """Wrapper de traduction en fonction de la langue courante."""
+    return translate(text, lang)
+
+
+# Définir la configuration de la page
+page_config = {**PAGE_CONFIG, "page_title": _("Analyse de Sentiments")}
+st.set_page_config(**page_config)
 
 # Personnaliser le style avec du CSS personnalisé
-st.markdown("""
-<style>
-    /* Fond général */
-    .reportview-container {
-        background-color: #F4F6F9;
-        font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
-    }
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-    /* Titres */
-    h1, h2, h3 {
-        color: #2C3E50;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-        background: linear-gradient(45deg, #3498db, #2ecc71);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    /* Amélioration des en-têtes */
-    .css-1h7aky3 {
-        background-color: rgba(44, 62, 80, 0.05);
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-
-    /* Boutons */
-    .stButton>button {
-        color: white;
-        background-color: #3498db;
-        border: none;
-        border-radius: 25px;
-        padding: 10px 20px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .stButton>button:hover {
-        background-color: #2980b9;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-    }
-
-    
-</style>
-""", unsafe_allow_html=True)
-
-# Charger le modèle
-@st.cache_resource
-def load_model():
-    return tf.keras.models.load_model('./templates/assets/AnalyseSentiment.h5')
-
-model = load_model()
 
 @st.cache_resource
-def load_tokenizer():
-    with open('./templates/assets/tokenizer.pkl', 'rb') as handle:
-        return pickle.load(handle)
+def get_sentiment_service():
+    """Retourne une instance mise en cache du service de sentiment."""
+    return SentimentModel()
 
-tokenizer = load_tokenizer()
 
-# Fonction pour traiter les séquences
-def seq_pad_and_trunc(sequences, tokenizer, padding='post', truncating='post', maxlen=100):
-    sequences = tokenizer.texts_to_sequences([sequences])
-    padded_sequences = pad_sequences(sequences, maxlen=maxlen, padding=padding, truncating=truncating)
-    return padded_sequences
+sentiment_service = get_sentiment_service()
+
 
 # Bouton de redirection
 st.markdown(
     f"""
-    <a href="https://gabriel.mariebrisson.fr" target="_blank" style="text-decoration:none;">
+    <a href="{APP_LINK}" target="_blank" style="text-decoration:none;">
     <div style="
     display: inline-block;
     background: linear-gradient(135deg, #6A11CB 0%, #2575FC 100%);
@@ -174,22 +76,23 @@ st.markdown(
     </div>
     </a>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
+
 
 # Titre et introduction
 st.title(_("Projet NLP : Surajustement et Classification des Sentiments"))
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     Ce projet utilise un modèle de réseau de neurones développé avec TensorFlow/Keras pour analyser 
     les sentiments dans des tweets, en exploitant une architecture basée sur les embeddings GloVe.
-    """)
+    """
+    )
 )
 
 
-
 # Analyse de texte
-# Modification de la section d'analyse
 st.header(_("🔍 Analyse de Sentiment en Temps Réel"))
 
 col1, col2 = st.columns([3, 1])
@@ -198,36 +101,35 @@ with col1:
     user_input = st.text_area(
         _("Entrez un texte en anglais pour tester le modèle :"),
         placeholder=_("Tapez votre texte ici..."),
-        height=150
+        height=150,
     )
 
 with col2:
-    st.write("") # Espace pour aligner
-    st.write("") # Espace pour aligner
+    st.write("")  # Espace pour aligner
+    st.write("")  # Espace pour aligner
     analyze_button = st.button(_("🧠 Analyser"), type="primary")
 
 if analyze_button:
     if user_input:
-        # Votre code de prédiction existant
-        processed_input = seq_pad_and_trunc(user_input, tokenizer)
-        prediction = model.predict(processed_input)
-        
-        sentiment = _("positif") if prediction[0][0] > 0.5 else _("négatif")
-        
+        prediction = sentiment_service.predict(user_input)
+        score = prediction[0][0]
+        is_positive = score > 0.5
+        sentiment = _("positif") if is_positive else _("négatif")
+
         # Affichage amélioré
         col_result1, col_result2 = st.columns(2)
-        
+
         with col_result1:
             st.metric(
-                label="Sentiment", 
-                value=sentiment.capitalize(), 
-                delta=_(f"{prediction[0][0]:.2f} de probabilité 0 pour negatif 1 pour positif")
+                label="Sentiment",
+                value=sentiment.capitalize(),
+                delta=_(f"{score:.2f} de probabilité 0 pour negatif 1 pour positif"),
             )
 
         st.balloons()
-        
+
         with col_result2:
-            if sentiment == "positif":
+            if is_positive:
                 st.success(_("🌞 Sentiment Positif Détecté!"))
             else:
                 st.warning(_("🌧️ Sentiment Négatif Détecté."))
@@ -235,12 +137,11 @@ if analyze_button:
         st.error(_("Veuillez entrer un texte avant de lancer l'analyse."))
 
 
-
-
 # Section Présentation
 st.header(_("Présentation"))
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     Ce projet vise à classifier les tweets en fonction des sentiments exprimés par les utilisateurs. Les réseaux sociaux jouent un rôle prépondérant dans la communication moderne, permettant à chacun d'exprimer librement son opinion. Les applications de cette technologie sont nombreuses :
 
     **Applications potentielles :**
@@ -252,12 +153,15 @@ st.markdown(_(
 
     Pour cela, nous avons utilisé le jeu de données Sentiment140, qui contient 1,6 million de tweets étiquetés par sentiment (0 pour négatif, 4 pour positif). Contrairement à un déploiement industriel, cette approche ne nécessite pas une ingénierie des données complète, incluant l'extraction, le nettoyage et la gestion des données manquantes. Le code a été développé lors de la certification TensorFlow, Cours 3, semaine 3, et vous pouvez le retrouver ici : [GitHub](https://github.com).
     """
-))
+    )
+)
+
 
 # Section Architecture du Modèle
 st.header(_("Architecture du Modèle"))
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     Pour classifier un texte, il est essentiel de le transformer en un format compréhensible par la machine. Nous avons utilisé la méthode d'embedding préentraînée GloVe de Stanford. Cette technique tient compte de la fréquence à laquelle des paires de mots apparaissent ensemble dans les textes, permettant ainsi de capturer des relations sémantiques subtiles entre les mots. Par exemple, une opération vectorielle possible est : roi - homme + femme ≈ reine. Une approche plus moderne consisterait à utiliser une architecture de type transformateur.
 
     Le modèle de classification des sentiments se compose de plusieurs couches :
@@ -267,29 +171,46 @@ st.markdown(_(
 
     Les hyperparamètres, tels que le nombre de neurones et le taux d'apprentissage, jouent un rôle crucial dans les performances du modèle. Parmi ces hyperparamètres figurent : le nombre de neurones, le taux d'apprentissage, la longueur maximale des séquences et la dimension de l'embedding.
     """
-))
-st.image("./templates/assets/images/Architecture.png", caption="Structure du modèle de classification des sentiments", use_container_width=True)
+    )
+)
+st.image(
+    "./templates/assets/images/Architecture.png",
+    caption="Structure du modèle de classification des sentiments",
+    use_container_width=True,
+)
+
 
 # Section Résultats
 st.header(_("Résultats"))
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     Les techniques les plus efficaces pour limiter le surajustement incluent la régularisation par dropout et la réduction de la complexité du modèle. Ces approches ont permis d'obtenir des résultats significatifs, comme en témoignent les courbes ci-dessous.
 
     En observant les courbes d'apprentissage, nous notons une convergence stable avec une précision atteignant 75 % sur les données de test (répartition 90/10) et 79 % sur les données d'apprentissage. Cela démontre une bonne capacité du modèle à généraliser sans trop s'adapter aux spécificités des données d'entraînement.
     """
-))
+    )
+)
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.image("./templates/assets/images/accurancy.png", caption="Courbes de précision", use_container_width=True)
+    st.image(
+        "./templates/assets/images/accurancy.png",
+        caption="Courbes de précision",
+        use_container_width=True,
+    )
 
 with col2:
-    st.image("./templates/assets/images/loss.png", caption="Courbes de perte", use_container_width=True)
+    st.image(
+        "./templates/assets/images/loss.png",
+        caption="Courbes de perte",
+        use_container_width=True,
+    )
 
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     **Performances du modèle :**
     - Précision de 75 % sur les données de test.
     - Précision de 79 % sur les données d'apprentissage.
@@ -297,12 +218,15 @@ st.markdown(_(
 
     En plus de la régularisation, des techniques telles que l'augmentation des données et l'ajustement des hyperparamètres ont été envisagées pour améliorer davantage les performances du modèle. Cela permettrait non seulement d'optimiser la précision, mais également d'accroître la robustesse face à des données variées.
     """
-))
+    )
+)
+
 
 # Section Coût et Maintenance
 st.header(_("Coût de Développement"))
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     Pour entraîner ce modèle, nous avons utilisé Google Colab, où l'entraînement à duré 13 minutes. Voici les spécifications matérielles utilisées :
 
     - **Processeur :** Intel Xeon (simple cœur) cadencé à 2,2 GHz.
@@ -319,13 +243,18 @@ st.markdown(_(
     - Utiliser des techniques d'augmentation de données pour enrichir l'ensemble d'apprentissage.
     - Implémenter une validation croisée pour mieux évaluer la robustesse du modèle.
     """
-))
+    )
+)
 
 
 # Footer
-st.markdown(_(
-    """
+st.markdown(
+    _(
+        """
     ---
     Développé par [Gabriel Marie-Brisson](https://gabriel.mariebrisson.fr)
     """
-))
+    )
+)
+
+
