@@ -1,16 +1,23 @@
 from pathlib import Path
 
 # Répertoires principaux
-BASE_DIR = Path(__file__).resolve().parent.parent
-ASSETS_DIR = BASE_DIR / "templates" / "assets"
-IMAGES_DIR = ASSETS_DIR / "images"
+BASE_DIR: Path = Path(__file__).resolve().parent.parent
+ASSETS_DIR: Path = BASE_DIR / "templates" / "assets"
+IMAGES_DIR: Path = ASSETS_DIR / "images"
 
 # Fichiers du modèle
-MODEL_PATH = ASSETS_DIR / "AnalyseSentiment.h5"
-TOKENIZER_PATH = ASSETS_DIR / "tokenizer.pkl"
+MODEL_PATH: Path = ASSETS_DIR / "AnalyseSentiment.h5"
+TOKENIZER_PATH: Path = ASSETS_DIR / "tokenizer.pkl"
+
+# Valeurs par défaut / constantes de configuration
+DEFAULT_LANGUAGE: str = "fr"
+TRANSLATION_SOURCE_LANGUAGE: str = "fr"
+DEFAULT_PADDING: str = "post"
+DEFAULT_TRUNCATING: str = "post"
+DEFAULT_MAX_SEQUENCE_LENGTH: int = 100
 
 # Configuration multilingue
-LANGUAGES = {
+LANGUAGES: dict[str, str] = {
     "fr": "🇫🇷 Français",
     "en": "🇬🇧 English",
     "es": "🇪🇸 Español",
@@ -23,16 +30,16 @@ LANGUAGES = {
     "ru": "🇷🇺 Русский",
 }
 
-PAGE_CONFIG = {
+PAGE_CONFIG: dict[str, str] = {
     "page_title": "Analyse de Sentiments",
     "page_icon": "😊",
     "layout": "wide",
     "initial_sidebar_state": "expanded",
 }
 
-APP_LINK = "https://gabriel.mariebrisson.fr"
+APP_LINK: str = "https://gabriel.mariebrisson.fr"
 
-CUSTOM_CSS = """
+CUSTOM_CSS: str = """
 <style>
     /* Fond général */
     .reportview-container {

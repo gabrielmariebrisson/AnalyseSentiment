@@ -29,19 +29,19 @@ class SentimentModel:
         self,
         model_path: Path = config.MODEL_PATH,
         tokenizer_path: Path = config.TOKENIZER_PATH,
-        max_sequence_length: int = 100,
+        max_sequence_length: int = config.DEFAULT_MAX_SEQUENCE_LENGTH,
     ) -> None:
-        self.model_path = str(model_path)
-        self.tokenizer_path = str(tokenizer_path)
-        self.max_sequence_length = max_sequence_length
-        self.model = _load_model(self.model_path)
-        self.tokenizer = _load_tokenizer(self.tokenizer_path)
+        self.model_path: str = str(model_path)
+        self.tokenizer_path: str = str(tokenizer_path)
+        self.max_sequence_length: int = max_sequence_length
+        self.model: tf.keras.Model = _load_model(self.model_path)
+        self.tokenizer: Any = _load_tokenizer(self.tokenizer_path)
 
-    def predict(self, sentence: str):
+    def predict(self, sentence: str) -> Any:
         """Retourne la prédiction brute du modèle pour un texte donné."""
         processed_input = seq_pad_and_trunc(
-            sentence,
-            self.tokenizer,
+            sentence=sentence,
+            tokenizer=self.tokenizer,
             maxlen=self.max_sequence_length,
         )
         return self.model.predict(processed_input)
