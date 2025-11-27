@@ -1,9 +1,12 @@
 # 📊 Analyse de Sentiment avec GloVe et CNN
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20.0-orange.svg)](https://www.tensorflow.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.50.0-red.svg)](https://streamlit.io/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20.0-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.50.0-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/gabrielmariebrisson/AnalyseSentiment/ci.yml?branch=main&style=for-the-badge&logo=github)](https://github.com/gabrielmariebrisson/AnalyseSentiment/actions)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
 
 Application web interactive d'analyse de sentiment basée sur un modèle de deep learning utilisant des embeddings GloVe et une architecture CNN (Convolutional Neural Network). Le projet permet d'analyser le sentiment de textes en temps réel via une interface Streamlit multilingue.
 
