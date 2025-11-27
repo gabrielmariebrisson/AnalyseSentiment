@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from typing import Any, Iterable, List
 
 import numpy as np
 import pytest
+
+# Ajouter le répertoire parent au PYTHONPATH pour permettre les imports `from src import ...`
+# Cela permet de lancer pytest depuis n'importe quel répertoire
+_project_root = Path(__file__).resolve().parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
 
 from src import config
 
