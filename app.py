@@ -186,7 +186,7 @@ st.markdown(
 st.image(
     "./templates/assets/images/Architecture.png",
     caption="Structure du modèle de classification des sentiments",
-    use_container_width=True,
+    width="stretch",
 )
 
 
@@ -208,14 +208,14 @@ with col1:
     st.image(
         "./templates/assets/images/accurancy.png",
         caption="Courbes de précision",
-        use_container_width=True,
+        width="stretch",
     )
 
 with col2:
     st.image(
         "./templates/assets/images/loss.png",
         caption="Courbes de perte",
-        use_container_width=True,
+        width="stretch",
     )
 
 st.markdown(
