@@ -109,7 +109,14 @@ with col2:
     st.write("")  # Espace pour aligner
     analyze_button = st.button(_("🧠 Analyser"), type="primary")
 
+# État persistant pour éviter un effet de double-clic
+if "run_analysis" not in st.session_state:
+    st.session_state.run_analysis = False
+
 if analyze_button:
+    st.session_state.run_analysis = True
+
+if st.session_state.run_analysis:
     if user_input:
         prediction = sentiment_service.predict(user_input)
         score = prediction[0][0]
@@ -133,6 +140,9 @@ if analyze_button:
                 st.success(_("🌞 Sentiment Positif Détecté!"))
             else:
                 st.warning(_("🌧️ Sentiment Négatif Détecté."))
+
+        # On consomme le clic et on réinitialise le flag
+        st.session_state.run_analysis = False
     else:
         st.error(_("Veuillez entrer un texte avant de lancer l'analyse."))
 
