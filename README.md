@@ -74,6 +74,61 @@ L'application sera accessible à l'adresse : `http://localhost:8501`
 - **Visualisations** : Graphiques de précision et de perte du modèle
 - **Documentation intégrée** : Présentation de l'architecture, des résultats et des coûts de développement
 
+## 🐳 Déploiement avec Docker
+
+L'application peut être déployée facilement avec Docker pour une installation et un déploiement simplifiés.
+
+### Prérequis
+
+- Docker installé sur votre système
+- Voir [la documentation Docker](https://docs.docker.com/get-docker/) pour l'installation
+
+### Construire l'image Docker
+
+```bash
+docker build -t analyse-sentiment .
+```
+
+### Lancer le conteneur
+
+```bash
+docker run -p 8501:8501 analyse-sentiment
+```
+
+L'application sera accessible à l'adresse : `http://localhost:8501`
+
+### Options avancées
+
+```bash
+# Lancer en arrière-plan (détaché)
+docker run -d -p 8501:8501 --name sentiment-app analyse-sentiment
+
+# Voir les logs
+docker logs sentiment-app
+
+# Arrêter le conteneur
+docker stop sentiment-app
+
+# Redémarrer le conteneur
+docker start sentiment-app
+```
+
+## 🔄 CI/CD avec GitHub Actions
+
+Le projet inclut un workflow GitHub Actions qui exécute automatiquement les tests à chaque push sur la branche `main`.
+
+### Workflow CI
+
+Le workflow `.github/workflows/ci.yml` :
+- S'active automatiquement sur les push et pull requests vers `main`
+- Teste le code sur Python 3.9, 3.10 et 3.11
+- Installe les dépendances et exécute la suite de tests avec `pytest`
+- Utilise le cache pip pour accélérer les builds
+
+### Vérifier le statut des tests
+
+Les résultats des tests sont visibles dans l'onglet **Actions** de votre dépôt GitHub. Un badge de statut peut être ajouté au README pour afficher le statut des tests.
+
 ## 🏗️ Architecture
 
 ### Choix technologiques
@@ -106,6 +161,8 @@ L'architecture utilise des couches de convolution 1D plutôt que des LSTM bidire
 ```
 AnalyseSentiment/
 ├── app.py                 # Application Streamlit principale
+├── Dockerfile             # Configuration Docker pour le déploiement
+├── .dockerignore          # Fichiers exclus du build Docker
 ├── src/
 │   ├── __init__.py
 │   ├── config.py         # Configuration et constantes
@@ -120,7 +177,11 @@ AnalyseSentiment/
 │       ├── AnalyseSentiment.h5  # Modèle sauvegardé
 │       ├── tokenizer.pkl        # Tokenizer sérialisé
 │       └── images/              # Graphiques de résultats
-└── requirements.txt       # Dépendances Python
+├── .github/
+│   └── workflows/
+│       └── ci.yml         # Workflow GitHub Actions pour CI/CD
+├── requirements.txt       # Dépendances Python
+└── README.md             # Documentation du projet
 ```
 
 ## 🧪 Tests
