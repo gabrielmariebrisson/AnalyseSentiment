@@ -14,20 +14,83 @@ _project_root = Path(__file__).resolve().parent.parent
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
-# Mocker streamlit AVANT l'import des modules src pour éviter ModuleNotFoundError
-# Cela permet de tester la logique sans dépendre de Streamlit installé
+# Mocker les dépendances AVANT l'import des modules src pour éviter ModuleNotFoundError
+# Cela permet de tester la logique sans dépendre de ces packages installés
+
+# 1. Mocker streamlit
 _mock_session_state = MagicMock()
 _mock_session_state.language = "fr"
 _mock_session_state.translations_cache = {}
 
-# Créer un mock complet de streamlit avec tous les attributs nécessaires
 _mock_streamlit = MagicMock()
 _mock_streamlit.session_state = _mock_session_state
 # @st.cache_resource devient une fonction identité (pas de cache dans les tests)
 _mock_streamlit.cache_resource = lambda func: func
-
-# Injecter le mock dans sys.modules AVANT que les modules src ne soient importés
 sys.modules["streamlit"] = _mock_streamlit
+
+# 2. Mocker tensorflow et ses sous-modules
+_mock_tensorflow = MagicMock()
+_mock_keras = MagicMock()
+_mock_keras_preprocessing = MagicMock()
+_mock_keras_preprocessing_sequence = MagicMock()
+
+# pad_sequences doit être une vraie fonction (utilisée dans seq_pad_and_trunc)
+# On importe numpy pour créer une fonction mock qui retourne un array
+def _mock_pad_sequences(sequences, maxlen=None, padding="post", truncating="post"):
+    """Mock de pad_sequences qui simule le comportement basique."""
+    import numpy as np
+    if not sequences:
+        return np.zeros((1, maxlen or 100), dtype=int)
+    seq = sequences[0]
+    if maxlen:
+        if len(seq) > maxlen:
+            if truncating == "post":
+                seq = seq[:maxlen]
+            else:  # pre
+                seq = seq[-maxlen:]
+        elif len(seq) < maxlen:
+            padding_value = 0
+            if padding == "post":
+                seq = seq + [padding_value] * (maxlen - len(seq))
+            else:  # pre
+                seq = [padding_value] * (maxlen - len(seq)) + seq
+    return np.array([seq], dtype=int)
+
+_mock_keras_preprocessing_sequence.pad_sequences = _mock_pad_sequences
+_mock_keras_preprocessing.sequence = _mock_keras_preprocessing_sequence
+_mock_keras.preprocessing = _mock_keras_preprocessing
+_mock_tensorflow.keras = _mock_keras
+
+# Créer un mock pour tf.keras.Model (utilisé dans les type hints)
+_mock_model_class = MagicMock()
+_mock_keras.Model = _mock_model_class
+
+# Mock pour tf.keras.models.load_model (utilisé dans _load_model)
+_mock_keras_models = MagicMock()
+_mock_keras_models.load_model = MagicMock()  # Sera remplacé par les tests qui mockent _load_model
+_mock_keras.models = _mock_keras_models
+
+sys.modules["tensorflow"] = _mock_tensorflow
+sys.modules["tensorflow.keras"] = _mock_keras
+sys.modules["tensorflow.keras.models"] = _mock_keras_models
+sys.modules["tensorflow.keras.preprocessing"] = _mock_keras_preprocessing
+sys.modules["tensorflow.keras.preprocessing.sequence"] = _mock_keras_preprocessing_sequence
+
+# 3. Mocker deep_translator
+_mock_google_translator = MagicMock()
+
+class _MockGoogleTranslator:
+    """Mock de GoogleTranslator pour éviter les appels API réels."""
+    def __init__(self, source: str = "fr", target: str = "en"):
+        self.source = source
+        self.target = target
+
+    def translate(self, text: str) -> str:
+        # Retourne le texte original pour les tests (pas de vraie traduction)
+        return f"[{self.target}]{text}"
+
+_mock_google_translator.GoogleTranslator = _MockGoogleTranslator
+sys.modules["deep_translator"] = _mock_google_translator
 
 from src import config
 
