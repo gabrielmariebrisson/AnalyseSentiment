@@ -17,7 +17,18 @@ set_language(lang)
 
 
 def _(text: str) -> str:
-    """Wrapper de traduction en fonction de la langue courante."""
+    """Wrapper de traduction en fonction de la langue courante.
+
+    Cette fonction est un raccourci pour traduire un texte depuis le français
+    vers la langue sélectionnée par l'utilisateur dans l'interface.
+
+    Args:
+        text: Texte en français à traduire.
+
+    Returns:
+        Texte traduit dans la langue courante, ou le texte original si la langue
+        est le français ou si la traduction échoue.
+    """
     return translate(text, lang)
 
 
@@ -30,8 +41,20 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
 @st.cache_resource
-def get_sentiment_service():
-    """Retourne une instance mise en cache du service de sentiment."""
+def get_sentiment_service() -> SentimentModel:
+    """Retourne une instance mise en cache du service de sentiment.
+
+    Le service est mis en cache via @st.cache_resource pour éviter de recharger
+    le modèle et le tokenizer à chaque interaction utilisateur, ce qui améliore
+    significativement les performances de l'application.
+
+    Returns:
+        Instance de SentimentModel initialisée avec les chemins par défaut.
+
+    Raises:
+        OSError: Si les fichiers modèle ou tokenizer ne peuvent pas être chargés.
+        ValueError: Si les fichiers sont corrompus ou incompatibles.
+    """
     return SentimentModel()
 
 
