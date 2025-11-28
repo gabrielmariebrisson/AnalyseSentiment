@@ -18,3 +18,10 @@ venv/
 # Ignorer les fichiers de configuration IDE
 .idea/
 .vscode/
+
+.venv_test/
+.venv/
+
+test_ci_local.sh
+test_ci_simple.sh
+TEST_LOCAL.md
